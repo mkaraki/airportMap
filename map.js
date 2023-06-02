@@ -1,3 +1,8 @@
+const hash = window.location.hash.substring(1).split(',');
+const opt_ignore_iata = hash.includes('ignore_iata');
+const opt_ignore_schedule = hash.includes('ignore_schedule');
+
+
 let defaultMapState = JSON.parse(localStorage.getItem('lastMapState') ?? '[{"lat":35.6580992222,"lng":139.7413574722},14]');
 let lastZoom = -1, lastPos = {};
 const map = L.map('map').setView(defaultMapState[0], defaultMapState[1]);
@@ -42,12 +47,12 @@ function updateMarkers() {
 
     const renderStations = stations.filter((s) => {
         return (
-            s.scheduled_service === 'yes' &&
-            s.iata_code !== '' &&
-            s.latitude_deg > mapBounds.getSouthWest().lat - 2.5 &&
-            s.latitude_deg < mapBounds.getNorthEast().lat + 2.5 &&
-            s.longitude_deg > mapBounds.getSouthWest().lng - 2.5 &&
-            s.longitude_deg < mapBounds.getNorthEast().lng + 2.5
+            (opt_ignore_schedule || s.scheduled_service === 'yes') &&
+            (opt_ignore_iata || s.iata_code !== '') &&
+            s.latitude_deg > mapBounds.getSouthWest().lat - 10 &&
+            s.latitude_deg < mapBounds.getNorthEast().lat + 10 &&
+            s.longitude_deg > mapBounds.getSouthWest().lng - 10 &&
+            s.longitude_deg < mapBounds.getNorthEast().lng + 10
         );
     });
 
@@ -75,7 +80,7 @@ function updateMarkers() {
 
     localStorage.setItem('lastMapState', JSON.stringify([lastPos, lastZoom]));
 
-    if (true || mapCurrentZoom > 12 || displayStations.length < 150) {
+    if (displayStations.length < 150) {
         voronoiObjects = voronoi(renderStations.map(function (v) {
             return [v.latitude_deg, v.longitude_deg];
         }));
